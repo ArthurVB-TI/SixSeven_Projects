@@ -1,27 +1,33 @@
+#pragma once
 #include <mysqlx/xdevapi.h>
 #include <iostream>
 
 using namespace mysqlx;
 
-int main() {
-    try {
-        // Conecta ao banco de dados (Host, Porta, Usuário, Senha)
-        Session sess("localhost", 33060, "seu_usuario", "sua_senha");
+class Database {
+    private:
+        Session* sess;
 
-        // Seleciona o schema (banco de dados)
-        Schema db = sess.getSchema("seu_banco");
+        Database() {
+            sess = new Session("localhost", 33060, "seu_usuario", "sua_senha");
+            sess->sql("USE seu_banco").execute();
+        }
 
-        // Exemplo de execução de query (SQL tradicional)
-        RowResult result = sess.sql("SELECT VERSION()").execute();
-        
-        Row row = result.fetchOne();
-        std.cout << "Versao do MySQL: " << row[0] << std.endl;
+        ~Database() {
+            sess->close();
+            delete sess;
+        }
 
-        sess.close();
+    public:
+        static Database& getInstance() {
+            static Database instance;
+            return instance;
+        }
 
-    } catch (const Error &err) {
-        std.cerr << "Erro no MySQL: " << err.what() << std.endl;
-        return 1;
-    }
-    return 0;
-}
+        Session& getConnection() {
+            return *sess;
+        }
+
+        Database(const Database&) = delete;
+        Database& operator=(const Database&) = delete;
+};
