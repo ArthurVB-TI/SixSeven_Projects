@@ -1,12 +1,9 @@
- /**
-   @author  PUC-Minas - ICEI
-   @version 0.1 - 2026-1
-
-   IO - v2026-1_0.2 - __ / __ / _____
-   Author: __________________________
-
-*/
-// ---------------------- lista de dependencias
+#include <mysql_driver.h>
+#include <mysql_connection.h>
+#include <cppconn/prepared_statement.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include "../config/db_connection.hpp"
 
 #include <iostream>       // para entradas e saidas
 #include <fstream>        // para arquivos

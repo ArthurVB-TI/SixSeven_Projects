@@ -1,5 +1,3 @@
-#include "../config/db_connection.hpp"
-
 #include "../app/Models/usuario.hpp"
 #include "../app/Models/conections.hpp"
 #include "../app/Models/dispositivos.hpp"

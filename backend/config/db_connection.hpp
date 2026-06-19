@@ -1,21 +1,20 @@
 #pragma once
-#include <mysqlx/xdevapi.h>
-#include <iostream>
 
-using namespace mysqlx;
+using namespace sql;
 
 class Database {
     private:
-        Session* sess;
+        mysql::MySQL_Driver* driver;
+        Connection* conn;
 
         Database() {
-            sess = new Session("localhost", 33060, "seu_usuario", "sua_senha");
-            sess->sql("USE seu_banco").execute();
+            driver = mysql::get_mysql_driver_instance();
+            conn = driver->connect("tcp://localhost:3306", "seu_usuario", "sua_senha");
+            conn->setSchema("seu_banco");
         }
 
         ~Database() {
-            sess->close();
-            delete sess;
+            delete conn;
         }
 
     public:
@@ -24,8 +23,8 @@ class Database {
             return instance;
         }
 
-        Session& getConnection() {
-            return *sess;
+        Connection& getConnection() {
+            return *conn;
         }
 
         Database(const Database&) = delete;

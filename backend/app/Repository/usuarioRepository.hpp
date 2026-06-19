@@ -1,34 +1,44 @@
 #pragma once
 
-using namespace mysqlx;
+using namespace sql;
 using namespace std;
 
 class usuarioRepository {
     private:
-        Session& sess;
+        Connection& conn;
     public:
-        usuarioRepository() : sess(Database::getInstance().getConnection()) {}
+        usuarioRepository() : conn(Database::getInstance().getConnection()) {}
 
         void Create(usuario& u) {
-            sess.sql("CALL usuario_Controller('Create', NULL, ?, ?, ?)")
-                .bind(u.get_nome(), u.get_email(), u.get_senha())
-                .execute();
+            PreparedStatement* stmt = conn.prepareStatement("CALL usuario_Controller('Create', NULL, ?, ?, ?)");
+            stmt->setString(1, u.get_nome());
+            stmt->setString(2, u.get_email());
+            stmt->setString(3, u.get_senha());
+            stmt->execute();
+            delete stmt;
         }
 
         void Update(usuario& u) {
-            sess.sql("CALL usuario_Controller('Update', ?, ?, ?, ?)")
-                .bind(u.get_id(), u.get_nome(), u.get_email(), u.get_senha())
-                .execute();
+            PreparedStatement* stmt = conn.prepareStatement("CALL usuario_Controller('Update', ?, ?, ?, ?)");
+            stmt->setInt(1, u.get_id());
+            stmt->setString(2, u.get_nome());
+            stmt->setString(3, u.get_email());
+            stmt->setString(4, u.get_senha());
+            stmt->execute();
+            delete stmt;
         }
 
         void Delete(int id) {
-            sess.sql("CALL usuario_Controller('Delete', ?, NULL, NULL, NULL)")
-                .bind(id)
-                .execute();
+            PreparedStatement* stmt = conn.prepareStatement("CALL usuario_Controller('Delete', ?, NULL, NULL, NULL)");
+            stmt->setInt(1, id);
+            stmt->execute();
+            delete stmt;
         }
 
-        SqlResult Index() {
-            return sess.sql("CALL usuario_Controller('Index', NULL, NULL, NULL, NULL)")
-                .execute();
+        ResultSet* Index() {
+            Statement* stmt = conn.createStatement();
+            ResultSet* res = stmt->executeQuery("CALL usuario_Controller('Index', NULL, NULL, NULL, NULL)");
+            delete stmt;
+            return res;
         }
 };

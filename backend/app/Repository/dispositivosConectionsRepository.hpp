@@ -1,28 +1,34 @@
 #pragma once
 
-using namespace mysqlx;
+using namespace sql;
 using namespace std;
 
 class dispositivosConectionsRepository {
     private:
-        Session& sess;
+        Connection& conn;
     public:
-        dispositivosConectionsRepository() : sess(Database::getInstance().getConnection()) {}
+        dispositivosConectionsRepository() : conn(Database::getInstance().getConnection()) {}
 
         void Create(dispositivos_conections& dc) {
-            sess.sql("CALL dispositivos_conections_Controller('Create', ?, ?)")
-                .bind(dc.get_id_conections(), dc.get_id_dispositivos())
-                .execute();
+            PreparedStatement* stmt = conn.prepareStatement("CALL dispositivos_conections_Controller('Create', ?, ?)");
+            stmt->setInt(1, dc.get_id_conections());
+            stmt->setInt(2, dc.get_id_dispositivos());
+            stmt->execute();
+            delete stmt;
         }
 
         void Delete(int id_conections, int id_dispositivos) {
-            sess.sql("CALL dispositivos_conections_Controller('Delete', ?, ?)")
-                .bind(id_conections, id_dispositivos)
-                .execute();
+            PreparedStatement* stmt = conn.prepareStatement("CALL dispositivos_conections_Controller('Delete', ?, ?)");
+            stmt->setInt(1, id_conections);
+            stmt->setInt(2, id_dispositivos);
+            stmt->execute();
+            delete stmt;
         }
 
-        SqlResult Index() {
-            return sess.sql("CALL dispositivos_conections_Controller('Index', NULL, NULL)")
-                .execute();
+        ResultSet* Index() {
+            Statement* stmt = conn.createStatement();
+            ResultSet* res = stmt->executeQuery("CALL dispositivos_conections_Controller('Index', NULL, NULL)");
+            delete stmt;
+            return res;
         }
 };
