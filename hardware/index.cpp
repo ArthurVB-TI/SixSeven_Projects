@@ -1,36 +1,40 @@
-#include "Dados.cpp"
-#include "Hooks.cpp"
-#include "hardware.cpp"
+#include "config.hpp"
 
-// Constantes
-const int PIN_led = 0;
-const int PIN_interruptor = 0;
-
-
+// Projeto ligado
 int isLigado(){
-    
+    int retorno = 0;
+
+    return retorno;
 }
 
+// Conexão com bluetooth
 int init_conection(){
     int retorno = 0;
     
     return retorno;
 }
 
+// Tempo de espera
 void await(int time){
 
 }
 
-
+// Definições iniciais
 void setup(){
     
 }
 
+
+// Corpo
 void loop(){
     if(isLigado()){
         if(init_conection()){
             Dados* d = new Dados();
             await(d->get_timer());
+
+            // Pegar dados
+
+            // Aplicar dados
         }
     }
 }

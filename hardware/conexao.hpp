@@ -1,0 +1,4 @@
+class Conexao{
+    public:
+        Conexao(){};
+};

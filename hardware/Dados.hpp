@@ -47,4 +47,14 @@ class Dados_Repository : public Dados{
             this->V_mer = V_mer;
             this->M_vmer = M_vmer;
         }
+
+        void Update(int id,int E_b,int E_r,int timer,int M_er,int V_mer,int M_vmer){
+            this->id = id;
+            this->E_b = E_b;
+            this->E_r = E_r;
+            this->timer = timer;
+            this->M_er = M_er;
+            this->V_mer = V_mer;
+            this->M_vmer = M_vmer;
+        }
 };
