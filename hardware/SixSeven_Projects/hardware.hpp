@@ -28,7 +28,7 @@ class Hardware {
 
         void computeAll();
 
-        void driveOutput();
+        void driveLed();
         void alert();
         void stopAlert();
 

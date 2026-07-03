@@ -45,25 +45,21 @@ class Hooks {
         void setReceivedEnergy(int value) { this->E_r = value; }
 
         bool push(const String& payload, Connection& conn) {
-            if (conn.wifiConnected()) {
-                HTTPClient http;
-                http.begin(url(SERVER_PATH));
-                http.addHeader("Content-Type", "application/json");
-                int code = http.POST(payload);
-                http.end();
-                return code >= 200 && code < 300;
-            }
-            if (conn.bluetoothConnected()) {
-                conn.getBluetooth().println(payload);
-                return true;
-            }
-            return false;
+            if (!conn.wifiConnected()) return false;
+            HTTPClient http;
+            http.begin(url(SERVER_PATH));
+            http.setTimeout(HTTP_TIMEOUT);
+            http.addHeader("Content-Type", "application/json");
+            int code = http.POST(payload);
+            http.end();
+            return code >= 200 && code < 300;
         }
 
         bool pull(Connection& conn) {
             if (!conn.wifiConnected()) return false;
             HTTPClient http;
             http.begin(url(SERVER_CONFIG_PATH) + "?id=" + String(CONNECTION_ID));
+            http.setTimeout(HTTP_TIMEOUT);
             int code = http.GET();
             if (code < 200 || code >= 300) {
                 http.end();

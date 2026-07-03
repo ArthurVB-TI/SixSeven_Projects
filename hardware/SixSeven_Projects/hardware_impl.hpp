@@ -19,10 +19,12 @@ void Hardware::begin() {
     pinMode(PIN_POT_BASE, INPUT);
     pinMode(PIN_BUTTON, INPUT_PULLUP);
 
-    ledcAttach(PIN_OUTPUT, PWM_FREQ, PWM_RES);
+    ledcAttach(PIN_LED_A, PWM_FREQ, PWM_RES);
+    ledcAttach(PIN_LED_B, PWM_FREQ, PWM_RES);
     ledcAttach(PIN_BUZZER, PWM_FREQ, PWM_RES);
     ledcWrite(PIN_BUZZER, 0);
-    ledcWrite(PIN_OUTPUT, 0);
+    ledcWrite(PIN_LED_A, 0);
+    ledcWrite(PIN_LED_B, 0);
 
     conn.start();
 }
@@ -56,19 +58,23 @@ void Hardware::computeAll() {
     data.computeMeanVariation();
 }
 
-void Hardware::driveOutput() {
+void Hardware::driveLed() {
     if (!powered) {
-        ledcWrite(PIN_OUTPUT, 0);
+        ledcWrite(PIN_LED_A, 0);
+        ledcWrite(PIN_LED_B, 0);
         return;
     }
-    int target = data.getBaseEnergy();
-    int measured = data.getMeanReceived();
-    int correction = target - measured;
-    int output = measured + correction;
-    if (output < 0) output = 0;
-    if (output > ADC_MAX) output = ADC_MAX;
-    int pwm = map(output, 0, ADC_MAX, 0, PWM_MAX);
-    ledcWrite(PIN_OUTPUT, pwm);
+    int level = data.getMeanReceived();
+    if (data.isStable() && level >= LED_HIGH) {
+        ledcWrite(PIN_LED_A, 0);
+        ledcWrite(PIN_LED_B, PWM_MAX);
+    } else if (level >= LED_LOW) {
+        ledcWrite(PIN_LED_A, PWM_MAX);
+        ledcWrite(PIN_LED_B, PWM_MAX);
+    } else {
+        ledcWrite(PIN_LED_A, PWM_MAX);
+        ledcWrite(PIN_LED_B, 0);
+    }
 }
 
 void Hardware::alert() {
@@ -99,7 +105,7 @@ void Hardware::manipulator() {
 }
 
 void Hardware::controller() {
-    driveOutput();
+    driveLed();
     if (powered && !data.isStable()) alert();
     stopAlert();
 }

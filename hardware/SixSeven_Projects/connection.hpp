@@ -5,7 +5,6 @@
 
 class Connection {
     private:
-        BluetoothSerial bt;
         unsigned long lastAttempt;
 
     public:
@@ -17,32 +16,22 @@ class Connection {
             WiFi.mode(WIFI_STA);
             WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
             unsigned long start = millis();
-            while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) {
+            while (WiFi.status() != WL_CONNECTED && millis() - start < BOOT_WIFI_WAIT) {
                 delay(250);
             }
             return wifiConnected();
         }
 
-        bool startBluetooth() {
-            return bt.begin(BT_NAME);
-        }
-
         bool start() {
-            bool wifi = startWifi();
-            bool blue = startBluetooth();
-            return wifi || blue;
+            return startWifi();
         }
 
         bool wifiConnected() {
             return WiFi.status() == WL_CONNECTED;
         }
 
-        bool bluetoothConnected() {
-            return bt.hasClient();
-        }
-
         bool isConnected() {
-            return wifiConnected() || bluetoothConnected();
+            return wifiConnected();
         }
 
         void keepAlive() {
@@ -54,15 +43,9 @@ class Connection {
             }
         }
 
-        BluetoothSerial& getBluetooth() {
-            return bt;
-        }
-
         void printStatus() {
             Serial.print("WiFi:");
-            Serial.print(wifiConnected() ? "ok" : "--");
-            Serial.print(" BT:");
-            Serial.println(bluetoothConnected() ? "ok" : "--");
+            Serial.println(wifiConnected() ? "ok" : "--");
         }
 };
 
