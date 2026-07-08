@@ -1,4 +1,0 @@
-class Conexao{
-    public:
-        Conexao(){};
-};
