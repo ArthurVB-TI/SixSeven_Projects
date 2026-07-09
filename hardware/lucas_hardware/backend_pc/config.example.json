@@ -1,9 +1,0 @@
-{
-  "_comment": "EXEMPLO versionavel. Copie para config.json (mesma pasta do backend.exe) e coloque a senha real do seu MySQL.",
-  "db_host": "127.0.0.1",
-  "db_user": "root",
-  "db_pass": "SUA_SENHA_DO_MYSQL",
-  "db_name": "projeto_esp32",
-  "db_port": 3306,
-  "http_port": 3000
-}
