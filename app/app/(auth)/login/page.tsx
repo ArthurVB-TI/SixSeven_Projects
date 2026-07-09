@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
 import {
   Button,
   Card,
@@ -23,11 +25,13 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const router = useRouter();
+  const auth = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   function validate(): Errors {
@@ -44,11 +48,19 @@ export default function LoginPage() {
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
+    setFormError(null);
     setLoading(true);
-    // TODO: integrar com a API de autenticação (enviar { email, password, remember }).
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setLoading(false);
-    router.push("/dashboard");
+    try {
+      await auth.login(email, password);
+      router.push("/dashboard");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setFormError("Email ou senha inválidos.");
+      } else {
+        setFormError(error instanceof ApiError ? error.message : "Não foi possível entrar. Tente novamente.");
+      }
+      setLoading(false);
+    }
   }
 
   return (
@@ -110,6 +122,8 @@ export default function LoginPage() {
               Esqueci minha senha
             </button>
           </div>
+
+          {formError ? <p className="text-sm text-danger">{formError}</p> : null}
 
           <Button type="submit" loading={loading} fullWidth>
             Entrar

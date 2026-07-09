@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
 import {
   Button,
   Card,
@@ -29,6 +31,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const auth = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +39,7 @@ export default function RegisterPage() {
   const [terms, setTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   function validate(): Errors {
@@ -55,11 +59,22 @@ export default function RegisterPage() {
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
+    setFormError(null);
     setLoading(true);
-    // TODO: integrar com a API de cadastro (enviar { name, email, password }).
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setLoading(false);
-    router.push("/dashboard");
+    try {
+      // Cadastra e já entra (o register do AuthProvider faz login automático).
+      await auth.register(name.trim(), email, password);
+      router.push("/dashboard");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        setErrors({ email: "Este email já está cadastrado." });
+      } else {
+        setFormError(
+          error instanceof ApiError ? error.message : "Não foi possível criar a conta. Tente novamente.",
+        );
+      }
+      setLoading(false);
+    }
   }
 
   return (
@@ -144,6 +159,8 @@ export default function RegisterPage() {
               onChange={(event) => setTerms(event.target.checked)}
             />
           </FormField>
+
+          {formError ? <p className="text-sm text-danger">{formError}</p> : null}
 
           <Button type="submit" loading={loading} fullWidth>
             Criar conta

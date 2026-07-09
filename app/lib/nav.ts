@@ -1,4 +1,4 @@
-export type NavIcon = "home" | "chart" | "users" | "settings";
+export type NavIcon = "home" | "chart" | "users" | "settings" | "plug" | "cpu";
 
 export type NavItem = {
   label: string;
@@ -11,7 +11,6 @@ export type NavItem = {
 /** Itens de navegação da sidebar do dashboard. */
 export const dashboardNav: NavItem[] = [
   { label: "Visão geral", href: "/dashboard", icon: "home" },
-  { label: "Relatórios", href: "/dashboard/relatorios", icon: "chart", disabled: true },
-  { label: "Usuários", href: "/dashboard/usuarios", icon: "users", disabled: true },
-  { label: "Configurações", href: "/dashboard/configuracoes", icon: "settings", disabled: true },
+  { label: "Conexões", href: "/dashboard/conexoes", icon: "plug" },
+  { label: "Dispositivos", href: "/dashboard/dispositivos", icon: "cpu" },
 ];
