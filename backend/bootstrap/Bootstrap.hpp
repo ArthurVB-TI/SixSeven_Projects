@@ -36,6 +36,12 @@ public:
         drogon::app().registerFilter(
             std::make_shared<app::middleware::CorsMiddleware>());
 
+        // Forca a instanciacao do registro estatico (DrClassMap) do
+        // AuthMiddleware: como a classe nunca e construida diretamente,
+        // o compilador descarta o registrador e o filtro "sumiria" das
+        // rotas que o referenciam por nome.
+        (void)app::middleware::AuthMiddleware::classTypeName();
+
         // Handler 404 padronizado (mesmo envelope do resto da API).
         drogon::app().setCustom404Page(
             app::helpers::Response::error("Rota nao encontrada",

@@ -1,0 +1,50 @@
+{
+  "_comment": "Config FORA da pasta app: infraestrutura (servidor, banco, segredos). Editar aqui, nunca commitar segredos reais.",
+
+  "app_name": "SixSeven_Projects",
+  "app_env": "development",
+
+  "listeners": [
+    {
+      "address": "0.0.0.0",
+      "port": 3000,
+      "https": false
+    }
+  ],
+
+  "app": {
+    "number_of_threads": 4,
+    "document_root": "./public",
+    "upload_path": "./storage/uploads",
+    "log": {
+      "log_path": "./storage/logs",
+      "logfile_base_name": "sixseven",
+      "log_level": "DEBUG"
+    },
+    "enable_session": false,
+    "max_connections": 100000
+  },
+
+  "db_clients": [
+    {
+      "name": "default",
+      "rdbms": "mysql",
+      "host": "127.0.0.1",
+      "port": 3306,
+      "dbname": "SixSeven_Projects",
+      "user": "root",
+      "passwd": "root",
+      "is_fast": false,
+      "connection_number": 4,
+      "character_set": "utf8mb4"
+    }
+  ],
+
+  "security": {
+    "jwt_secret": "TROQUE_ESTE_SEGREDO_POR_UMA_CHAVE_LONGA_E_ALEATORIA",
+    "access_token_ttl_seconds": 900,
+    "refresh_token_ttl_seconds": 2592000,
+    "bcrypt_cost": 10,
+    "cors_allow_origin": "http://localhost:5173"
+  }
+}

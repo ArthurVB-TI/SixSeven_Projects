@@ -38,8 +38,14 @@ public:
         u.id_ = row["id"].as<int>();
         u.nome_ = row["nome"].as<std::string>();
         u.email_ = row["email"].as<std::string>();
-        if (!row["senha"].isNull())
-            u.senha_ = row["senha"].as<std::string>();
+        // A view index_usuario nao expoe a coluna 'senha' (de
+        // proposito); acessar coluna inexistente lanca RangeError.
+        try {
+            if (!row["senha"].isNull())
+                u.senha_ = row["senha"].as<std::string>();
+        } catch (const std::exception&) {
+            // linha veio de uma view sem senha — segue sem o hash
+        }
         return u;
     }
 

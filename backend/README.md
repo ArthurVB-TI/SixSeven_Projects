@@ -97,42 +97,55 @@ assíncrona via um callback.
 
 ## 3. Pré-requisitos e instalação
 
-Você precisa de: **CMake ≥ 3.16**, um compilador **C++17**, **Drogon**,
-**OpenSSL**, **cliente MySQL** e o **servidor MySQL/MariaDB**. E da
-**libbcrypt** vendorizada (passo abaixo).
+Você precisa de: **CMake ≥ 3.16**, compilador **C++17**, **Drogon**,
+**OpenSSL**, **cliente MySQL** e o **servidor MySQL/MariaDB**.
 
-### Ubuntu/Debian
+### Instalação automática (Ubuntu/Debian — recomendado)
+
+Um script faz tudo de uma vez: instala dependências do sistema, compila e
+instala o Drogon, baixa a libbcrypt e compila o backend:
 
 ```bash
-sudo apt update
-sudo apt install -y build-essential cmake git \
-    libjsoncpp-dev uuid-dev zlib1g-dev openssl libssl-dev \
-    libmysqlclient-dev mysql-server
+chmod +x install.sh && ./install.sh
 ```
 
-Instalar o Drogon (via fonte, recomendado):
+### Instalação manual (Ubuntu 25.04 / Debian)
+
+**1) Dependências do sistema:**
 
 ```bash
-git clone https://github.com/drogonframework/drogon
-cd drogon && git submodule update --init
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential cmake git \
+    libjsoncpp-dev uuid-dev zlib1g-dev libssl-dev \
+    libpq-dev libbrotli-dev libmysqlclient-dev
+```
+
+> Pacotes que já costumam vir instalados: `libjsoncpp-dev`, `uuid-dev`,
+> `zlib1g-dev`, `libssl-dev`. Os que normalmente **faltam** e causam erro no
+> cmake: `libpq-dev`, `libbrotli-dev`, `libmysqlclient-dev`.
+
+**2) Drogon (compilar da fonte — única forma confiável no Ubuntu 25.04):**
+
+```bash
+git clone --depth=1 https://github.com/drogonframework/drogon
+cd drogon && git submodule update --init --recursive
 mkdir build && cd build
-cmake .. && make -j$(nproc)
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_MYSQL=ON -DBUILD_POSTGRESQL=ON -DBUILD_SQLITE=OFF
+make -j$(nproc)
 sudo make install
+sudo ldconfig
 ```
 
-> Alternativas: **vcpkg** (`vcpkg install drogon[mysql]`) ou **Homebrew** no
-> macOS (`brew install drogon openssl mysql-client`).
+> Alternativa macOS: `brew install drogon openssl mysql-client`
 
-### libbcrypt (hash de senha) — obrigatório
-
-O hash de senha usa a **libbcrypt**. Ela é vendorizada em `composers/`.
-Baixe uma vez:
+**3) libbcrypt (vendorizada em `composers/`):**
 
 ```bash
 cd composers
-git clone https://github.com/rg3/libbcrypt.git
-# garanta que o header seja acessível como <bcrypt/bcrypt.h>:
+git clone --depth=1 https://github.com/rg3/libbcrypt.git
 mkdir -p bcrypt && cp libbcrypt/bcrypt.h bcrypt/bcrypt.h
+cd ..
 ```
 
 Detalhes e alternativa com Argon2 em [`composers/README.md`](composers/README.md).
@@ -242,11 +255,8 @@ curl http://localhost:3000/health
 # {"ok":true,"data":{"status":"up","app":"SixSeven_Projects","env":"development"}}
 ```
 
-> **Nota de transparência:** este ambiente de geração não tinha MySQL nem
-> Drogon instalados (sem rede), então o projeto **não foi compilado/rodado
-> aqui**. A validação foi por revisão e checagem de sintaxe. Ao compilar na sua
-> máquina, se algum header do Drogon divergir de versão, ajuste conforme as
-> mensagens — a estrutura e a lógica estão completas.
+> Para instalar todas as dependências e compilar de uma vez, use o script
+> `install.sh` na raiz do backend (ver seção 3).
 
 ---
 

@@ -24,14 +24,14 @@ public:
     // expiraEm no formato 'YYYY-MM-DD HH:MM:SS'.
     void create(int idUsuario, const std::string& tokenHash, const std::string& expiraEm) {
         auto db = config::Database::client();
-        db->execSqlSync("CALL refresh_token_Controller('Create', ?, ?, ?)",
+        config::Database::callSync(db, "CALL refresh_token_Controller('Create', ?, ?, ?)",
                         idUsuario, tokenHash, expiraEm);
     }
 
     // Retorna a linha somente se valida (nao revogada e nao expirada).
     std::optional<RefreshTokenRow> findValid(const std::string& tokenHash) {
         auto db = config::Database::client();
-        auto res = db->execSqlSync("CALL refresh_token_Controller('Find', NULL, ?, NULL)", tokenHash);
+        auto res = config::Database::callSync(db, "CALL refresh_token_Controller('Find', NULL, ?, NULL)", tokenHash);
         if (res.size() == 0) return std::nullopt;
         RefreshTokenRow r;
         r.id = res[0]["id"].as<int64_t>();
@@ -44,12 +44,12 @@ public:
 
     void revoke(const std::string& tokenHash) {
         auto db = config::Database::client();
-        db->execSqlSync("CALL refresh_token_Controller('Revoke', NULL, ?, NULL)", tokenHash);
+        config::Database::callSync(db, "CALL refresh_token_Controller('Revoke', NULL, ?, NULL)", tokenHash);
     }
 
     void revokeAll(int idUsuario) {
         auto db = config::Database::client();
-        db->execSqlSync("CALL refresh_token_Controller('RevokeAll', ?, NULL, NULL)", idUsuario);
+        config::Database::callSync(db, "CALL refresh_token_Controller('RevokeAll', ?, NULL, NULL)", idUsuario);
     }
 };
 

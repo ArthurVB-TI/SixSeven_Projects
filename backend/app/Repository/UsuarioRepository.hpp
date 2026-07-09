@@ -20,7 +20,7 @@ public:
     int create(const std::string& nome, const std::string& email,
                const std::string& senhaHash) {
         auto db = config::Database::client();
-        auto res = db->execSqlSync(
+        auto res = config::Database::callSync(db, 
             "CALL usuario_Controller('Create', NULL, ?, ?, ?)",
             nome, email, senhaHash);
         if (res.size() > 0 && !res[0]["id"].isNull())
@@ -30,18 +30,18 @@ public:
 
     void update(const models::Usuario& u) {
         auto db = config::Database::client();
-        db->execSqlSync("CALL usuario_Controller('Update', ?, ?, ?, ?)",
+        config::Database::callSync(db, "CALL usuario_Controller('Update', ?, ?, ?, ?)",
                         u.getId(), u.getNome(), u.getEmail(), u.getSenha());
     }
 
     void remove(int id) {
         auto db = config::Database::client();
-        db->execSqlSync("CALL usuario_Controller('Delete', ?, NULL, NULL, NULL)", id);
+        config::Database::callSync(db, "CALL usuario_Controller('Delete', ?, NULL, NULL, NULL)", id);
     }
 
     std::vector<models::Usuario> index() {
         auto db = config::Database::client();
-        auto res = db->execSqlSync("CALL usuario_Controller('Index', NULL, NULL, NULL, NULL)");
+        auto res = config::Database::callSync(db, "CALL usuario_Controller('Index', NULL, NULL, NULL, NULL)");
         std::vector<models::Usuario> out;
         out.reserve(res.size());
         for (const auto& row : res) out.push_back(models::Usuario::fromRow(row));
@@ -51,7 +51,7 @@ public:
     // Usado no login: traz o hash da senha.
     std::optional<models::Usuario> findByEmail(const std::string& email) {
         auto db = config::Database::client();
-        auto res = db->execSqlSync(
+        auto res = config::Database::callSync(db, 
             "CALL usuario_Controller('FindByEmail', NULL, NULL, ?, NULL)", email);
         if (res.size() == 0) return std::nullopt;
         return models::Usuario::fromRow(res[0]);

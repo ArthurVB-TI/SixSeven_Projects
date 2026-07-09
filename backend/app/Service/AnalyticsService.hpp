@@ -43,6 +43,14 @@ protected:
         for (const auto& x : d) labels.append(x.t);
         return labels;
     }
+
+    // Monta uma serie no formato {name, data} esperado pelo front.
+    static Json::Value named(const std::string& name, const Json::Value& data) {
+        Json::Value s;
+        s["name"] = name;
+        s["data"] = data;
+        return s;
+    }
 };
 
 // Grafico 1: Energia recebida x media (linha dupla).

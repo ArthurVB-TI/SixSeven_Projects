@@ -1,0 +1,30 @@
+20260708 15:59:11.247641 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247650 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247673 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247677 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247696 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247701 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247719 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247722 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247739 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247753 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247756 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247759 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247764 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247767 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247771 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247774 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247781 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247785 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247787 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247796 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247809 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247819 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247839 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247842 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247846 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247850 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247854 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 15:59:11.247856 UTC 22156 ERROR middleware app::middleware::AuthMiddleware not found - MiddlewaresFunction.cc:164
+20260708 18:52:02.345972 UTC 29831 ERROR DB error: no column named senha - BaseController.hpp:29
+20260708 18:55:02.301325 UTC 29809 WARN  SIGTERM signal received. - HttpAppFrameworkImpl.cc:172

@@ -14,21 +14,21 @@ class DispositivoConectionRepository {
 public:
     void create(int idConections, int idDispositivos) {
         auto db = config::Database::client();
-        db->execSqlSync(
+        config::Database::callSync(db, 
             "CALL dispositivos_conections_Controller('Create', ?, ?)",
             idConections, idDispositivos);
     }
 
     void remove(int idConections, int idDispositivos) {
         auto db = config::Database::client();
-        db->execSqlSync(
+        config::Database::callSync(db, 
             "CALL dispositivos_conections_Controller('Delete', ?, ?)",
             idConections, idDispositivos);
     }
 
     std::vector<models::DispositivoConection> index() {
         auto db = config::Database::client();
-        auto res = db->execSqlSync("CALL dispositivos_conections_Controller('Index', NULL, NULL)");
+        auto res = config::Database::callSync(db, "CALL dispositivos_conections_Controller('Index', NULL, NULL)");
         std::vector<models::DispositivoConection> out;
         for (const auto& row : res) out.push_back(models::DispositivoConection::fromRow(row));
         return out;

@@ -12,7 +12,10 @@
 
 namespace app::middleware {
 
-class CorsMiddleware : public drogon::HttpFilter<CorsMiddleware> {
+// AutoCreation=false: este filtro e registrado manualmente como
+// filtro global em Bootstrap::init(); o Drogon proibe registro
+// manual de filtros auto-criados.
+class CorsMiddleware : public drogon::HttpFilter<CorsMiddleware, false> {
 public:
     void doFilter(const drogon::HttpRequestPtr& req,
                   drogon::FilterCallback&& fcb,

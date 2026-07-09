@@ -15,7 +15,7 @@ class ConectionRepository {
 public:
     int create(const models::Conection& c) {
         auto db = config::Database::client();
-        auto res = db->execSqlSync(
+        auto res = config::Database::callSync(db, 
             "CALL conections_Controller('Create', NULL, ?, ?, ?, ?)",
             c.getNome(), c.getCanActive(), c.getIsActive(), c.getIdUsuario());
         if (res.size() > 0 && !res[0]["id"].isNull())
@@ -25,19 +25,19 @@ public:
 
     void update(const models::Conection& c) {
         auto db = config::Database::client();
-        db->execSqlSync(
+        config::Database::callSync(db, 
             "CALL conections_Controller('Update', ?, ?, ?, ?, ?)",
             c.getId(), c.getNome(), c.getCanActive(), c.getIsActive(), c.getIdUsuario());
     }
 
     void remove(int id) {
         auto db = config::Database::client();
-        db->execSqlSync("CALL conections_Controller('Delete', ?, NULL, NULL, NULL, NULL)", id);
+        config::Database::callSync(db, "CALL conections_Controller('Delete', ?, NULL, NULL, NULL, NULL)", id);
     }
 
     std::vector<models::Conection> index() {
         auto db = config::Database::client();
-        auto res = db->execSqlSync("CALL conections_Controller('Index', NULL, NULL, NULL, NULL, NULL)");
+        auto res = config::Database::callSync(db, "CALL conections_Controller('Index', NULL, NULL, NULL, NULL, NULL)");
         std::vector<models::Conection> out;
         for (const auto& row : res) out.push_back(models::Conection::fromRow(row));
         return out;
@@ -45,7 +45,7 @@ public:
 
     std::vector<models::Conection> indexByUsuario(int idUsuario) {
         auto db = config::Database::client();
-        auto res = db->execSqlSync(
+        auto res = config::Database::callSync(db, 
             "CALL conections_Controller('IndexByUsuario', NULL, NULL, NULL, NULL, ?)", idUsuario);
         std::vector<models::Conection> out;
         for (const auto& row : res) out.push_back(models::Conection::fromRow(row));
@@ -55,7 +55,7 @@ public:
     // Busca direta (para checar posse antes de operar).
     std::optional<models::Conection> findById(int id) {
         auto db = config::Database::client();
-        auto res = db->execSqlSync("SELECT * FROM index_conections WHERE id = ?", id);
+        auto res = config::Database::callSync(db, "SELECT * FROM index_conections WHERE id = ?", id);
         if (res.size() == 0) return std::nullopt;
         return models::Conection::fromRow(res[0]);
     }
