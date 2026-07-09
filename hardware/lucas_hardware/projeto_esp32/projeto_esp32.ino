@@ -1,48 +1,59 @@
 /*
  * ============================================================================
- *  PROJETO INTEGRADOR I - Parte Hardware (ESP32)
- *  Telemetria de sensores via Wi-Fi com transporte desacoplado.
+ *  PROJETO INTEGRADOR I - Parte Hardware (ESP32-S3)
+ *  Le sensores, mostra no OLED e envia para o backend SixSeven.
  * ============================================================================
  *
- *  HARDWARE REAL DESTA MONTAGEM:
- *    - 2 potenciometros: VP (GPIO36) e VN (GPIO39)
- *    - LED RGB catodo comum, so 2 cores: D32 e D33 (comum no GND)
- *    - OLED SSD1306 I2C: SDA=D25, SCL=D26 (remapeado por software)
- *    - Buzzer em D13
- *    - SEM botoes / SEM interruptor fisico: "ligado" vem de um limiar do pot
+ *  FLUXO:
+ *    - Pot de ENERGIA (PINO_POT_ENERGIA) -> E_r (energia recebida / leitura atual)
+ *    - Pot de SOM     (PINO_POT_SOM)     -> E_b (energia base / referencia)
+ *    - Filtro de media movel calcula M_er (media de E_r) e M_vmer (media da variacao)
+ *    - V_mer = |E_r - M_er|  (o backend considera "estavel" quando V_mer <= 150)
+ *    - OLED mostra E_r, E_b, estabilidade e status de Wi-Fi
+ *    - POST no backend em /data no formato: {id,E_b,E_r,timer,M_er,V_mer,M_vmer}
  *
- *  COMPATIBILIDADE PWM: o core ESP32 3.x trocou a API de LEDC.
- *  Usamos a API NOVA (ledcAttach / ledcWrite por PINO), que funciona no 3.x.
+ *  Pinos e credenciais ficam no config.h / secrets.h (nao alterados aqui).
+ *
+ *  COMPATIBILIDADE PWM: core ESP32 3.x usa a API NOVA (ledcAttach/ledcWrite
+ *  por PINO), adotada abaixo.
  * ============================================================================
  */
 
 #include "config.h"
 #include "ITransporte.h"
-#include "TransporteHTTP.h"
+#include "TransporteHTTP.hpp"
 #include "FiltroMediaMovel.h"
 
+// ---- Identidade/limiar deste hardware (nao mexe no config.h) ----
+static const int CONEXAO_ID     = 1;    // id desta conexao no backend
+static const int LIMIAR_ESTAVEL = 150;  // V_mer <= isso => estavel (igual ao backend)
+
 // ---- Display OLED ----
-Adafruit_SSD1306 display(LARGURA, ALTURA, &Wire, -1);
+Adafruit_SSD1306 display(OLED_LARGURA, OLED_ALTURA, &Wire, -1);
 
 // ---- Transporte: troque SO esta linha para mudar a forma de envio ----
 ITransporte* transporte = new TransporteHTTP(WIFI_SSID, WIFI_SENHA, URL_DESTINO);
 
-// ---- Filtros (um para cada sensor analogico) ----
-FiltroMediaMovel<TAMANHO_JANELA> filtroEnergia;
-FiltroMediaMovel<TAMANHO_JANELA> filtroSom;
+// ---- Filtros de media movel (buffer circular) ----
+FiltroMediaMovel<TAMANHO_JANELA> filtroEnergia;   // E_r  -> M_er
+FiltroMediaMovel<TAMANHO_JANELA> filtroBase;      // pot2 -> E_b (suavizado)
+FiltroMediaMovel<TAMANHO_JANELA> filtroVariacao;  // V_mer -> M_vmer
 
 // ---- Controle de tempo (millis, nao-bloqueante) ----
 unsigned long ultimaLeitura = 0;
 unsigned long ultimoEnvio = 0;
 unsigned long fimDoBip = 0;   // marca quando o bip deve parar (millis)
 
-// ---- Estado atual lido dos sensores ----
-float energiaFiltrada = 0;
-float somFiltrado = 0;
+// ---- Grandezas no formato do backend ----
+int E_r = 0;      // energia recebida (leitura crua do pot de energia)
+int M_er = 0;     // media movel de E_r
+int V_mer = 0;    // variacao = |E_r - M_er|
+int M_vmer = 0;   // media movel da variacao
+int E_b = 0;      // energia base (pot de "som" reaproveitado como referencia)
 bool ligado = false;
 
-// ---- Gamificacao: pontuacao simples ----
-long pontuacao = 0;
+// ---- Contador de envios com sucesso (feedback no OLED) ----
+long envios = 0;
 
 // ---- Prototipos ----
 void enviarTelemetria();
@@ -62,8 +73,8 @@ void setup() {
   ledcWrite(PINO_BUZZER, 0);   // buzzer silenciado no boot
 
   // --- OLED ---
-  Wire.begin(PINO_SDA, PINO_SCL);
-  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+  Wire.begin(PINO_OLED_SDA, PINO_OLED_SCL);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ENDERECO)) {
     Serial.println("[BOOT] Falha ao iniciar o OLED");
   } else {
     display.clearDisplay();
@@ -95,14 +106,17 @@ void loop() {
     ultimaLeitura = agora;
 
     int leituraEnergia = analogRead(PINO_POT_ENERGIA);
-    int leituraSom = analogRead(PINO_POT_SOM);
+    int leituraBase    = analogRead(PINO_POT_SOM);   // 2o pot = energia base
 
-    // filtro de media movel (obrigatorio)
-    energiaFiltrada = filtroEnergia.adicionar(leituraEnergia);
-    somFiltrado = filtroSom.adicionar(leituraSom);
+    // E_r cru + medias moveis (filtro obrigatorio)
+    E_r    = leituraEnergia;
+    M_er   = (int) filtroEnergia.adicionar(leituraEnergia);
+    E_b    = (int) filtroBase.adicionar(leituraBase);
+    V_mer  = abs(E_r - M_er);
+    M_vmer = (int) filtroVariacao.adicionar(V_mer);
 
     // Sem interruptor: "ligado" quando o pot de energia passa do limiar
-    ligado = (energiaFiltrada > LIMIAR_LIGADO);
+    ligado = (E_r > LIMIAR_LIGADO);
 
     atualizarLed();
     atualizarTela();
@@ -115,24 +129,27 @@ void loop() {
   }
 }
 
-// Monta o JSON e manda pela interface (sem saber se e HTTP, MQTT, etc.)
+// Monta o JSON no formato do backend e manda pela interface (HTTP, MQTT, etc.).
+// Contrato do backend (POST /data): {id,E_b,E_r,timer,M_er,V_mer,M_vmer}
 void enviarTelemetria() {
   String json = "{";
-  json += "\"energia\":" + String(energiaFiltrada, 1) + ",";
-  json += "\"som\":" + String(somFiltrado, 1) + ",";
-  json += "\"ligado\":" + String(ligado ? "true" : "false") + ",";
-  json += "\"pontuacao\":" + String(pontuacao) + ",";
-  json += "\"uptime_ms\":" + String(millis());
+  json += "\"id\":"     + String(CONEXAO_ID) + ",";
+  json += "\"E_b\":"    + String(E_b) + ",";
+  json += "\"E_r\":"    + String(E_r) + ",";
+  json += "\"timer\":"  + String(INTERVALO_ENVIO) + ",";
+  json += "\"M_er\":"   + String(M_er) + ",";
+  json += "\"V_mer\":"  + String(V_mer) + ",";
+  json += "\"M_vmer\":" + String(M_vmer);
   json += "}";
 
   bool ok = transporte->enviar(json);
   if (ok) {
-    pontuacao++;
+    envios++;
     bipCurto();
   }
 }
 
-// LED RGB de 2 cores: mistura conforme o nivel de "energia" filtrado.
+// LED RGB de 2 cores: mistura conforme o nivel de energia (media).
 // Catodo comum -> a cor acende quando o PWM sobe (HIGH).
 void atualizarLed() {
   if (!ligado) {
@@ -141,45 +158,49 @@ void atualizarLed() {
     return;
   }
 
-  // energia filtrada vai de ~0 a 4095
-  if (energiaFiltrada < 1500) {
+  // M_er vai de ~0 a 4095
+  if (M_er < 1500) {
     // FRACO -> vermelho
-    ledcWrite(PINO_LED_A, 255);   // vermelho no maximo
-    ledcWrite(PINO_LED_B, 0);     // verde apagado
-  } else if (energiaFiltrada < 2800) {
-    // MEDIO -> amarelo (vermelho + verde juntos)
-    ledcWrite(PINO_LED_A, 255);   // vermelho
-    ledcWrite(PINO_LED_B, 255);   // verde
+    ledcWrite(PINO_LED_A, 255);
+    ledcWrite(PINO_LED_B, 0);
+  } else if (M_er < 2800) {
+    // MEDIO -> amarelo (vermelho + verde)
+    ledcWrite(PINO_LED_A, 255);
+    ledcWrite(PINO_LED_B, 255);
   } else {
     // FORTE -> verde
-    ledcWrite(PINO_LED_A, 0);     // vermelho apagado
-    ledcWrite(PINO_LED_B, 255);   // verde no maximo
+    ledcWrite(PINO_LED_A, 0);
+    ledcWrite(PINO_LED_B, 255);
   }
 }
 
-// Mostra energia, som, estado e pontuacao na tela OLED.
+// Mostra E_r, E_b, estabilidade e Wi-Fi no OLED.
 void atualizarTela() {
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
+  bool estavel = (V_mer <= LIMIAR_ESTAVEL);
+
   display.setTextSize(1);
   display.setCursor(0, 0);
   display.print("Estado: ");
-  display.println(ligado ? "LIGADO" : "desligado");
+  display.println(estavel ? "ESTAVEL" : "instavel");
 
   display.setTextSize(2);
   display.setCursor(0, 12);
-  display.print("E:");
-  display.println((int)energiaFiltrada);
-
-  display.setCursor(0, 32);
-  display.print("S:");
-  display.println((int)somFiltrado);
+  display.print("Er:");
+  display.println(E_r);
 
   display.setTextSize(1);
+  display.setCursor(0, 34);
+  display.print("Eb:");
+  display.print(E_b);
+  display.print("  V:");
+  display.println(V_mer);
+
   display.setCursor(0, 54);
-  display.print("Pontos: ");
-  display.print(pontuacao);
+  display.print("Env:");
+  display.print(envios);
   display.print(transporte->conectado() ? "  WiFi:ok" : "  WiFi:--");
 
   display.display();
