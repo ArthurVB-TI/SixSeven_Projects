@@ -41,7 +41,7 @@ public:
     void list(const drogon::HttpRequestPtr& req,
               std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
         handle([&]() {
-            return helpers::Response::success(service_.list());
+            return helpers::Response::success(service_.list(uid(req)));
         }, std::move(cb));
     }
 
@@ -62,7 +62,7 @@ public:
                 const std::string& idStr) {
         handle([&]() {
             int id = security::Sanitizer::toPositiveInt(idStr, "id");
-            service_.remove(id);
+            service_.remove(id, uid(req));
             return helpers::Response::success();
         }, std::move(cb));
     }
@@ -70,7 +70,7 @@ public:
     void links(const drogon::HttpRequestPtr& req,
                std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
         handle([&]() {
-            return helpers::Response::success(service_.links());
+            return helpers::Response::success(service_.links(uid(req)));
         }, std::move(cb));
     }
 
@@ -79,7 +79,8 @@ public:
         handle([&]() {
             helpers::RequestParser p(req);
             service_.link(p.requireInt("id_conection"),
-                          p.requireInt("id_dispositivo"));
+                          p.requireInt("id_dispositivo"),
+                          uid(req));
             return helpers::Response::success(drogon::k201Created);
         }, std::move(cb));
     }
@@ -89,7 +90,8 @@ public:
         handle([&]() {
             helpers::RequestParser p(req);
             service_.unlink(p.requireInt("id_conection"),
-                            p.requireInt("id_dispositivo"));
+                            p.requireInt("id_dispositivo"),
+                            uid(req));
             return helpers::Response::success();
         }, std::move(cb));
     }
