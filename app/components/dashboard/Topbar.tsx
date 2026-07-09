@@ -1,19 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui";
 import { LogoutIcon, MenuIcon } from "@/components/icons";
+import { useAuth } from "@/lib/auth";
 
 type TopbarProps = {
   onMenu: () => void;
 };
 
-export function Topbar({ onMenu }: TopbarProps) {
-  const router = useRouter();
+/** Iniciais do nome para o avatar (ex.: "Arthur Vilela" → "AV"). */
+function initialsOf(nome: string): string {
+  const parts = nome.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase() || "?";
+}
 
-  function handleLogout() {
-    // TODO: encerrar a sessão na API antes de redirecionar.
-    router.push("/login");
+export function Topbar({ onMenu }: TopbarProps) {
+  const { usuario, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await logout();
   }
 
   return (
@@ -31,16 +41,18 @@ export function Topbar({ onMenu }: TopbarProps) {
 
       <div className="flex items-center gap-3">
         <div className="hidden text-right sm:block">
-          <p className="text-sm font-medium leading-tight text-foreground">Usuária Demo</p>
-          <p className="text-xs leading-tight text-muted-foreground">demo@sixseven.app</p>
+          <p className="text-sm font-medium leading-tight text-foreground">
+            {usuario?.nome ?? "Carregando…"}
+          </p>
+          <p className="text-xs leading-tight text-muted-foreground">{usuario?.email ?? ""}</p>
         </div>
         <div
           aria-hidden="true"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
         >
-          UD
+          {usuario ? initialsOf(usuario.nome) : "…"}
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
+        <Button variant="ghost" size="sm" onClick={handleLogout} loading={loggingOut}>
           <LogoutIcon width={18} height={18} />
           <span className="hidden sm:inline">Sair</span>
         </Button>

@@ -5,13 +5,23 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Logo } from "@/components/brand/Logo";
 import { dashboardNav, type NavIcon } from "@/lib/nav";
-import { ChartIcon, CloseIcon, HomeIcon, SettingsIcon, UsersIcon } from "@/components/icons";
+import {
+  ChartIcon,
+  CloseIcon,
+  CpuIcon,
+  HomeIcon,
+  PlugIcon,
+  SettingsIcon,
+  UsersIcon,
+} from "@/components/icons";
 
 const iconMap: Record<NavIcon, (props: React.SVGProps<SVGSVGElement>) => React.ReactElement> = {
   home: HomeIcon,
   chart: ChartIcon,
   users: UsersIcon,
   settings: SettingsIcon,
+  plug: PlugIcon,
+  cpu: CpuIcon,
 };
 
 type SidebarProps = {
