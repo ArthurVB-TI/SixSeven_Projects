@@ -1,2 +1,0 @@
-/usr/bin/ar qc libbcrypt.a CMakeFiles/bcrypt.dir/composers/libbcrypt/bcrypt.c.o CMakeFiles/bcrypt.dir/composers/libbcrypt/crypt_blowfish/crypt_blowfish.c.o CMakeFiles/bcrypt.dir/composers/libbcrypt/crypt_blowfish/crypt_gensalt.c.o CMakeFiles/bcrypt.dir/composers/libbcrypt/crypt_blowfish/wrapper.c.o
-/usr/bin/ranlib libbcrypt.a

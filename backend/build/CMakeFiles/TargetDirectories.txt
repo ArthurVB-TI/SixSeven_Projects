@@ -1,4 +1,0 @@
-/home/arthur/Documentos/GitHub/Pikamon/SixSeven_Projects/backend/build/CMakeFiles/bcrypt.dir
-/home/arthur/Documentos/GitHub/Pikamon/SixSeven_Projects/backend/build/CMakeFiles/sixseven_backend.dir
-/home/arthur/Documentos/GitHub/Pikamon/SixSeven_Projects/backend/build/CMakeFiles/edit_cache.dir
-/home/arthur/Documentos/GitHub/Pikamon/SixSeven_Projects/backend/build/CMakeFiles/rebuild_cache.dir
