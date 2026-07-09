@@ -14,13 +14,10 @@
 //     e vizinhos (flash/PSRAM), GPIO6-11 (flash).
 // =====================================================================
 
-// ---------- Wi-Fi ----------
-// Descomente e ajuste para religar o Wi-Fi:
-#define WIFI_SSID     "IZAMARAWIFI_2.4"
-#define WIFI_SENHA    "@Ia020180"
-
-// ---------- Endpoint que recebe os dados ----------
-#define URL_DESTINO   "http://192.168.18.5:3000/dados"
+// ---------- Wi-Fi e endpoint ----------
+// Credenciais e IP do backend ficam no secrets.h (fora do git).
+// Copie secrets.example.h para secrets.h e ajuste para a sua rede.
+#include "secrets.h"
 
 // ---------- LED RGB (3 cores: A, B, C) ----------
 // Catodo comum: comum no GND, cada cor acende em HIGH.
