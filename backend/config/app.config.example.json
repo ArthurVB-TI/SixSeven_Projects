@@ -35,11 +35,14 @@
       "character_set": "utf8mb4"
     }
   ],
-  "security": {
-    "jwt_secret": "GERE_UMA_CHAVE_LONGA_ALEATORIA_ex_openssl_rand_hex_32",
-    "access_token_ttl_seconds": 900,
-    "refresh_token_ttl_seconds": 2592000,
-    "bcrypt_cost": 10,
-    "cors_allow_origin": "http://localhost:5173"
+  "custom_config": {
+    "app_env": "development",
+    "security": {
+      "jwt_secret": "GERE_UMA_CHAVE_LONGA_ALEATORIA_ex_openssl_rand_hex_32",
+      "access_token_ttl_seconds": 900,
+      "refresh_token_ttl_seconds": 2592000,
+      "bcrypt_cost": 10,
+      "cors_allow_origin": "http://localhost:5173"
+    }
   }
 }

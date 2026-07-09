@@ -13,7 +13,7 @@ USE SixSeven_Projects;
 -- Usuario de teste ------------------------------------------------
 INSERT INTO usuario(nome, email, senha) VALUES
 ('Arthur Victor', 'arthur@sixseven.dev',
- '$2a$10$fX27PcRV2pTXmvVbc896VOPZlJ13JsUMpQ.Oaph7kBSSA1IT5RqAW');
+ '$2a$10$qlYGJKVAT8lzYJ/4ku2msexhoQA4K4MpQgaRe.UlKVGlJB7LKSITm');
 
 SET @uid = LAST_INSERT_ID();
 

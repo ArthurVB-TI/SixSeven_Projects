@@ -20,19 +20,23 @@
 #include "httplib.h"     // servidor HTTP
 #include <mysql.h>       // cliente MySQL (Connector/C)
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <cstdlib>
 
 // ---------------------------------------------------------------------------
-// CONFIGURACAO DO BANCO  -- ajuste a SENHA para a do seu root
+// CONFIGURACAO DO BANCO -- lida do config.json (mesma pasta do executavel).
+// NADA de senha no codigo: copie config.example.json para config.json e
+// coloque la a senha real. O config.json fica fora do git (.gitignore).
 // ---------------------------------------------------------------------------
-const char* DB_HOST  = "127.0.0.1";
-const char* DB_USER  = "root";
-const char* DB_PASS  = "aura++67";  // <<< troque pela senha do root
-const char* DB_NAME  = "projeto_esp32";
-const unsigned DB_PORT = 3306;
+std::string DB_HOST  = "127.0.0.1";
+std::string DB_USER  = "root";
+std::string DB_PASS  = "";
+std::string DB_NAME  = "projeto_esp32";
+unsigned    DB_PORT  = 3306;
 
-const int PORTA_HTTP = 3000;
+int PORTA_HTTP = 3000;
 
 // ---------------------------------------------------------------------------
 // Extrai o valor de uma chave do JSON de forma simples.
@@ -60,7 +64,42 @@ std::string extrairValor(const std::string& json, const std::string& chave) {
     return valor;
 }
 
+// ---------------------------------------------------------------------------
+// Le o config.json e preenche as variaveis de configuracao.
+// Usa o mesmo extrairValor do JSON do ESP32 (o arquivo e simples e plano).
+// Devolve false se o arquivo nao existir.
+// ---------------------------------------------------------------------------
+bool carregarConfig(const std::string& caminho) {
+    std::ifstream arquivo(caminho);
+    if (!arquivo.is_open()) return false;
+
+    std::stringstream ss;
+    ss << arquivo.rdbuf();
+    std::string json = ss.str();
+
+    std::string v;
+    if (!(v = extrairValor(json, "db_host")).empty())   DB_HOST = v;
+    if (!(v = extrairValor(json, "db_user")).empty())   DB_USER = v;
+    if (!(v = extrairValor(json, "db_pass")).empty())   DB_PASS = v;
+    if (!(v = extrairValor(json, "db_name")).empty())   DB_NAME = v;
+    if (!(v = extrairValor(json, "db_port")).empty())   DB_PORT = (unsigned)std::atoi(v.c_str());
+    if (!(v = extrairValor(json, "http_port")).empty()) PORTA_HTTP = std::atoi(v.c_str());
+    return true;
+}
+
 int main() {
+    // -----------------------------------------------------------------------
+    // 0) Carrega a configuracao (host, usuario, SENHA, banco, portas)
+    // -----------------------------------------------------------------------
+    if (!carregarConfig("config.json")) {
+        std::cerr << "Erro: config.json nao encontrado na pasta do executavel.\n"
+                  << "Copie config.example.json para config.json e coloque a\n"
+                  << "senha real do MySQL nele.\n";
+        return 1;
+    }
+    std::cout << "[OK] config.json carregado (banco: " << DB_NAME
+              << ", porta HTTP: " << PORTA_HTTP << ")\n";
+
     // -----------------------------------------------------------------------
     // 1) Conecta no MySQL (uma vez, no inicio)
     // -----------------------------------------------------------------------
@@ -70,7 +109,8 @@ int main() {
         return 1;
     }
 
-    if (mysql_real_connect(conexao, DB_HOST, DB_USER, DB_PASS, DB_NAME,
+    if (mysql_real_connect(conexao, DB_HOST.c_str(), DB_USER.c_str(),
+                           DB_PASS.c_str(), DB_NAME.c_str(),
                            DB_PORT, nullptr, 0) == nullptr) {
         std::cerr << "Erro ao conectar no MySQL: " << mysql_error(conexao) << "\n";
         mysql_close(conexao);

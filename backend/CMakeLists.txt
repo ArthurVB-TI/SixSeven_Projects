@@ -35,7 +35,9 @@ add_library(bcrypt STATIC
     ${BCRYPT_DIR}/crypt_blowfish/crypt_gensalt.c
     ${BCRYPT_DIR}/crypt_blowfish/wrapper.c
 )
-target_include_directories(bcrypt PUBLIC ${BCRYPT_DIR})
+# PRIVATE: se este dir fosse PUBLIC, o bcrypt.h da libbcrypt sombrearia
+# o <bcrypt.h> do proprio Windows (CNG), quebrando o wincrypt.h no MinGW.
+target_include_directories(bcrypt PRIVATE ${BCRYPT_DIR})
 # A libbcrypt espera encontrar <bcrypt/bcrypt.h>; expomos o pai
 # de "composers/" para que #include <bcrypt/bcrypt.h> resolva.
 target_include_directories(bcrypt PUBLIC ${CMAKE_SOURCE_DIR}/composers)

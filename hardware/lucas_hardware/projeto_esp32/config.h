@@ -9,13 +9,10 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// ---------- Wi-Fi ----------
-#define WIFI_SSID     "IZAMARAWIFI_2.4"
-#define WIFI_SENHA    "@Ia020180"
-
-// ---------- Endpoint que recebe os dados ----------
-// Troque pelo IP/porta do backend dos seus colegas.
-#define URL_DESTINO   "http://192.168.18.5:3000/dados"
+// ---------- Wi-Fi e endpoint ----------
+// Credenciais e IP do backend ficam no secrets.h (fora do git).
+// Copie secrets.example.h para secrets.h e ajuste para a sua rede.
+#include "secrets.h"
 
 // ---------- OLED ----------
 #define LARGURA 128
