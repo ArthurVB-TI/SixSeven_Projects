@@ -17,7 +17,8 @@
 #   NUMBER_OF_THREADS=0          0 = nº de núcleos da máquina
 #   DB_HOST / DB_PORT=3306 / DB_USER=root
 #   DB_PASSWORD                  (obrigatória)
-#   DB_NAME=SixSeven_Projects    (os SQLs de DB/ usam esse nome fixo)
+#   DB_NAME=SixSeven_Projects    (se for outro, o init reescreve o nome
+#                                 nos SQLs de DB/ ao aplicá-los)
 #   DB_CONNECTIONS=4             pool do Drogon
 #   JWT_SECRET                   (obrigatória — ex.: openssl rand -hex 32)
 #   ACCESS_TOKEN_TTL=900         segundos
@@ -52,10 +53,9 @@ set -e
 : "${DB_SEED:=true}"
 : "${DB_WAIT_TIMEOUT:=90}"
 
-if [ "$DB_NAME" != "SixSeven_Projects" ]; then
-    echo "AVISO: os scripts de DB/ criam o database 'SixSeven_Projects'." >&2
-    echo "       Com DB_NAME=$DB_NAME o auto-init não funciona — ajuste os SQLs." >&2
-fi
+# Os SQLs de DB/ trazem "SixSeven_Projects" fixo (CREATE DATABASE/USE).
+# Se DB_NAME for outro (ex.: o database que o template do EasyPanel já
+# criou), o init reescreve o nome na hora de aplicar cada arquivo.
 
 # ---- 1) config/app.config.json ----
 mkdir -p config storage/logs storage/uploads
@@ -134,7 +134,7 @@ if [ "$DB_AUTO_INIT" = "true" ]; then
         [ "$DB_SEED" = "true" ] && files="$files data"
         for f in $files; do
             echo "  >> DB/$f.sql"
-            if ! mysql_cmd < "DB/$f.sql"; then
+            if ! sed "s/SixSeven_Projects/${DB_NAME}/g" "DB/$f.sql" | mysql_cmd; then
                 # Sem rollback aqui o schema ficaria pela metade e o
                 # próximo restart pularia o init achando que está pronto.
                 echo "ERRO em DB/$f.sql — desfazendo init parcial (DROP DATABASE ${DB_NAME})." >&2

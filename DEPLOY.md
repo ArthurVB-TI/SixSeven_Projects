@@ -46,8 +46,14 @@ usam o projeto real **`puc`** com os serviços `mysql`, `sixseven_backend` e
 ### 1. Projeto e banco
 
 1. Crie o projeto `puc` (ou use o existente).
-2. **+ Service → MySQL**, nome **`mysql`** (imagem 8.x), defina a senha do
-   root. Não exponha porta pública. Host interno: `puc_mysql`.
+2. **+ Service → MySQL** (imagem 8.x). Não exponha porta pública. O template
+   cria um database e um usuário de aplicação (ex.: database
+   `sixseven_mysql`, usuário `mysql`) — dá para usá-los direto no backend,
+   **desde que** o binlog seja desligado: no serviço MySQL, defina o
+   **Command** (Advanced) como `mysqld --skip-log-bin` e reinicie. Sem isso,
+   o MySQL 8 exige SUPER para criar as functions/triggers do schema e o init
+   falha com `ERROR 1419` (só o root passaria). Binlog não é usado neste
+   projeto e ainda economiza disco.
 
 ### 2. Backend
 
@@ -58,11 +64,11 @@ usam o projeto real **`puc`** com os serviços `mysql`, `sixseven_backend` e
 - **Environment**:
 
   ```env
-  DB_HOST=puc_mysql
+  DB_HOST=<host interno do serviço MySQL, ex.: sixseven_mysql>
   DB_PORT=3306
-  DB_NAME=SixSeven_Projects
-  DB_USER=root
-  DB_PASSWORD=<Root Password mostrado no serviço MySQL do painel>
+  DB_NAME=sixseven_mysql
+  DB_USER=mysql
+  DB_PASSWORD=<senha do usuário mostrada no serviço MySQL>
   JWT_SECRET=<gere com: openssl rand -hex 32>
   APP_ENV=production
   CORS_ALLOW_ORIGIN=*
@@ -168,16 +174,23 @@ limite. Na ordem:
    EasyPanel de "GitHub" para "Docker Image" apontando para a imagem pronta.
    A VPS passa a só fazer `pull`.
 
-### Backend em loop de restart com `ERROR 1044 Access denied ... to database 'SixSeven_Projects'`
+### Backend em loop de restart com `ERROR 1044` ou `ERROR 1419` no init
 
-O usuário configurado em `DB_USER` não pode **criar** o database. O usuário
-que o template de MySQL do EasyPanel cria (ex.: `mysql`) só tem privilégio no
-database do próprio template — o init precisa de `CREATE DATABASE`,
-`CREATE FUNCTION` e `CREATE TRIGGER`. **Correção sem console**: no serviço do
-backend, troque as envs para `DB_USER=root` e `DB_PASSWORD=<Root Password do
-serviço MySQL>` e salve — no redeploy o entrypoint roda o init completo
-sozinho. Se um init anterior falhou no meio, o entrypoint (versão atual) já
-desfaz o schema parcial antes de sair, então o retry recomeça limpo.
+Dois erros da mesma família — o usuário de `DB_USER` sem privilégio
+suficiente. Nenhum precisa de console no backend (ele se recupera sozinho no
+próximo restart, desfazendo qualquer schema parcial):
+
+- **`ERROR 1044 Access denied ... to database 'SixSeven_Projects'`**: o
+  usuário do template só enxerga o database do próprio template. Aponte
+  `DB_NAME` para **esse** database (ex.: `sixseven_mysql`) — o entrypoint
+  reescreve o nome nos SQLs automaticamente. (Ou use `DB_USER=root`.)
+- **`ERROR 1419 You do not have the SUPER privilege and binary logging is
+  enabled`**: o binlog do MySQL 8 exige SUPER para criar functions/triggers.
+  Correção: no **serviço MySQL**, Command = `mysqld --skip-log-bin` e
+  restart (testado — o init completo passa com o usuário comum). Alternativa
+  sem mexer no command: no console do **serviço MySQL** (esse não está em
+  loop), rode como root `SET GLOBAL log_bin_trust_function_creators = 1;` e
+  reinicie o backend — vale até o próximo restart do MySQL.
 
 ### Como dar seed no banco na VPS
 
@@ -189,17 +202,19 @@ a imagem já traz o cliente `mysql`, os SQLs em `DB/` e as credenciais nas
 envs:
 
 **Só o seed** (banco criado sem dados — rode UMA vez, o `data.sql` é
-`INSERT` puro e duplica se repetido):
+`INSERT` puro e duplica se repetido; o `sed` ajusta o nome do database,
+igual o entrypoint faz):
 
 ```bash
-mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" < DB/data.sql
+sed "s/SixSeven_Projects/$DB_NAME/g" DB/data.sql | \
+  mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD"
 ```
 
 **Reset completo** (⚠️ apaga TUDO, inclusive leituras já enviadas pelo ESP32):
 
 ```bash
 mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" \
-  -e "DROP DATABASE SixSeven_Projects"
+  -e "DROP DATABASE \`$DB_NAME\`"
 ```
 
 Depois clique em **Restart** no serviço — o entrypoint recria schema + seed.
@@ -208,7 +223,7 @@ Para conferir se o seed já está lá:
 
 ```bash
 mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" \
-  -e "SELECT id, email FROM SixSeven_Projects.usuario"
+  -e "SELECT id, email FROM \`$DB_NAME\`.usuario"
 ```
 
 ### Front no ar mas login/API falham (502/ECONNREFUSED nos rewrites)
