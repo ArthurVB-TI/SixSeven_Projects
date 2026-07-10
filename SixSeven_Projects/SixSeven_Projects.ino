@@ -19,6 +19,7 @@ void loop() {
 
     hardware.keepConnection();
     hardware.readButton();
+    hardware.displayer();
 
     if (!hardware.isPowered()) {
         hardware.controller();

@@ -52,6 +52,7 @@
 #define OLED_WIDTH 128       // resolucao do SSD1306
 #define OLED_HEIGHT 64
 #define OLED_ADDRESS 0x3C    // endereco I2C (alguns modulos usam 0x3D)
+#define OLED_INTERVAL 400    // ms entre redesenhos (I2C e lento)
 
 // ---------- PWM (LEDC) ----------
 #define PWM_FREQ 5000

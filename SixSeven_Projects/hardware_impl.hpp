@@ -4,16 +4,20 @@
 #include "config.hpp"
 #include "hardware.hpp"
 
-Hardware::Hardware() {
+Hardware::Hardware() : display(OLED_WIDTH, OLED_HEIGHT, &Wire, -1) {
     powered = false;
     lastButton = false;
     lastDebounce = 0;
     beepEnd = 0;
+    oledOk = false;
+    lastPushOk = false;
+    lastOled = 0;
 }
 
 void Hardware::begin() {
     Serial.begin(115200);
-    delay(300);
+    // Espera o USB CDC do S3 enumerar para nao perder o banner de boot.
+    delay(1000);
 
     pinMode(PIN_POT_RECEIVED, INPUT);
     pinMode(PIN_POT_BASE, INPUT);
@@ -26,7 +30,74 @@ void Hardware::begin() {
     ledcWrite(PIN_LED_A, 0);
     ledcWrite(PIN_LED_B, 0);
 
-    conn.start();
+    Serial.println();
+    Serial.println("== SixSeven boot ==");
+    beginOled();
+    Serial.print("WiFi \"");
+    Serial.print(WIFI_SSID);
+    Serial.print("\"... ");
+    bool wifiOk = conn.start();
+    Serial.println(wifiOk ? "conectado" : "FALHOU (vai tentando em background)");
+    if (wifiOk) {
+        Serial.print("IP: ");
+        Serial.println(WiFi.localIP());
+    }
+    Serial.print("backend: http://");
+    Serial.print(SERVER_HOST);
+    Serial.print(":");
+    Serial.println(SERVER_PORT);
+    Serial.println("power OFF — aperte o botao para iniciar leitura/envio");
+    drawOled();
+}
+
+void Hardware::beginOled() {
+    Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
+    oledOk = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS);
+    Serial.print("OLED: ");
+    Serial.println(oledOk ? "ok" : "nao encontrado (segue sem display)");
+}
+
+void Hardware::drawOled() {
+    if (!oledOk) return;
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.print("SixSeven   WiFi:");
+    display.println(conn.wifiConnected() ? "ok" : "--");
+
+    if (!powered) {
+        display.setCursor(0, 24);
+        display.println("power: OFF");
+        display.println();
+        display.println("aperte o botao");
+    } else {
+        display.setCursor(0, 12);
+        display.print("power:ON   envio:");
+        display.println(lastPushOk ? "ok" : "--");
+        display.setTextSize(2);
+        display.setCursor(0, 26);
+        display.print("Er ");
+        display.println(data.getReceivedEnergy());
+        display.setTextSize(1);
+        display.setCursor(0, 46);
+        display.print("Eb:");
+        display.print(data.getBaseEnergy());
+        display.print("  M:");
+        display.println(data.getMeanReceived());
+        display.setCursor(0, 56);
+        display.print(data.isStable() ? "estavel " : "INSTAVEL");
+        display.print("  V:");
+        display.print(data.getVariation());
+    }
+    display.display();
+}
+
+void Hardware::displayer() {
+    if (millis() - lastOled >= OLED_INTERVAL) {
+        lastOled = millis();
+        drawOled();
+    }
 }
 
 int Hardware::readReceivedEnergy() {
@@ -47,6 +118,7 @@ bool Hardware::readButton() {
     if (pressed && !lastButton && millis() - lastDebounce >= DEBOUNCE_INTERVAL) {
         lastDebounce = millis();
         powered = !powered;
+        Serial.println(powered ? "power: ON" : "power: OFF");
     }
     lastButton = pressed;
     return powered;
@@ -115,7 +187,8 @@ void Hardware::printer() {
 }
 
 bool Hardware::push() {
-    return hooks.push(data.toJson(), conn);
+    lastPushOk = hooks.push(data.toJson(), conn);
+    return lastPushOk;
 }
 
 bool Hardware::pull() {
