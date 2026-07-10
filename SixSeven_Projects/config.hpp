@@ -21,12 +21,15 @@
 #define WIFI_PASSWORD "Guacamole23!"
 
 // ---------- Backend (o que conversa com o Drogon) ----------
-// Dominio precisa apontar (DNS A) para o IP da VPS, com a porta 3000
-// publicada no EasyPanel (HTTP cru — este cliente nao faz TLS).
+// Este cliente fala HTTP cru (sem TLS e sem seguir redirect), entao:
+//  - NAO usar a porta 3000 do host: e o painel do EasyPanel.
+//  - NAO usar 80/443: o dominio redireciona para HTTPS.
+//  - Caminho certo: porta publicada no servico do backend no EasyPanel
+//    (Ports: host 3100 -> container 3000) + liberar 3100/tcp no firewall.
 // O contrato e POST /data + GET /config — NAO trocar por /dados
 // (isso e do outro backend, incompativel com este firmware).
 #define SERVER_HOST "sixsevenapi.nerv3.xyz"
-#define SERVER_PORT 3000
+#define SERVER_PORT 3100
 #define SERVER_PATH "/data"          // POST das leituras
 #define SERVER_CONFIG_PATH "/config" // GET da configuracao (E_b, timer)
 
