@@ -17,8 +17,8 @@
 // ---------- Wi-Fi ----------
 // ATENCAO: o ESP32-S3 so conecta em redes 2.4 GHz. Um SSID "_5G"
 // nunca vai conectar — use a rede 2.4 do mesmo roteador.
-#define WIFI_SSID "MUNOZ-COELHO"
-#define WIFI_PASSWORD "Guacamole23!"
+#define WIFI_SSID "5R4N"
+#define WIFI_PASSWORD "tytanicderg"
 
 // ---------- Backend (o que conversa com o Drogon) ----------
 // Este cliente fala HTTP cru (sem TLS e sem seguir redirect), entao:

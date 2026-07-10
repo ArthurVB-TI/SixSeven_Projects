@@ -1,4 +1,4 @@
-# SixSeven Projects — Medidor de Energia com ESP32-S3
+# SMRE — Sistema de Mitigação de Ruído Elétrico com ESP32-S3
 
 Sistema completo de monitoramento de energia: um **hardware (ESP32-S3)** lê,
 filtra e envia medições para um **backend em C++ (Drogon + MySQL)** hospedado
@@ -97,6 +97,6 @@ docker compose up --build
 
 - Arthur Victor Alves
 - Lucas Coelho
-- Francisco
+- Francisco Viotti
 - Matheus Assis
 - Vinícius Raposo
