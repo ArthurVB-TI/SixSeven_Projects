@@ -14,7 +14,12 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Sem audit/fund/notifier: menos rede e CPU no npm ci — VPSs pequenas
+# matam o processo por limite de recurso (exit 152/137) à toa.
+ENV NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_FUND=false \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
+RUN npm ci --loglevel=error
 
 # ---------- 2) build ----------
 FROM node:22-alpine AS build
@@ -22,9 +27,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# DNS interno do EasyPanel = <projeto>_<serviço>, ex.: puc_sixseven_backend
 ARG BACKEND_URL=http://sixseven_backend:3000
 ENV BACKEND_URL=${BACKEND_URL} \
-    NEXT_TELEMETRY_DISABLED=1
+    NEXT_TELEMETRY_DISABLED=1 \
+    NODE_OPTIONS=--max-old-space-size=1024
 
 RUN npm run build
 

@@ -19,7 +19,7 @@
 #define WIFI_PASSWORD "Guacamole23!"
 
 // ---------- Backend (o que conversa com o Drogon) ----------
-#define SERVER_HOST "192.168.18.5"
+#define SERVER_HOST "sixsevenapi.nerv3.xyz"
 #define SERVER_PORT 3000
 #define SERVER_PATH "/data"          // POST das leituras
 #define SERVER_CONFIG_PATH "/config" // GET da configuracao (E_b, timer)
