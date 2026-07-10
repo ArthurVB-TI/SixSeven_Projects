@@ -1,0 +1,14 @@
+# Artefatos de build/execução locais — nunca entram na imagem
+build/
+storage/logs/
+storage/uploads/
+
+# Segredos locais (o container gera a config via entrypoint)
+config/app.config.json
+
+# Irrelevantes para o build
+install.sh
+start_local.sh
+start_backend.bat
+*.md
+.DS_Store

@@ -15,8 +15,8 @@
 // =====================================================================
 
 // ---------- Wi-Fi ----------
-#define WIFI_SSID "IZAMARAWIFI_2.4"
-#define WIFI_PASSWORD "@Ia020180"
+#define WIFI_SSID "MUNOZ-COELHO_5G"
+#define WIFI_PASSWORD "Guacamole23!"
 
 // ---------- Backend (o que conversa com o Drogon) ----------
 #define SERVER_HOST "192.168.18.5"
