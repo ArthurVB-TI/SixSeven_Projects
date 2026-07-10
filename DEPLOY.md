@@ -62,7 +62,7 @@ usam o projeto real **`puc`** com os serviços `mysql`, `sixseven_backend` e
   DB_PORT=3306
   DB_NAME=SixSeven_Projects
   DB_USER=root
-  DB_PASSWORD=<senha do mysql acima>
+  DB_PASSWORD=<Root Password mostrado no serviço MySQL do painel>
   JWT_SECRET=<gere com: openssl rand -hex 32>
   APP_ENV=production
   CORS_ALLOW_ORIGIN=*
@@ -167,6 +167,17 @@ limite. Na ordem:
    GitHub Actions publicando em `ghcr.io` — e trocar o Source do serviço no
    EasyPanel de "GitHub" para "Docker Image" apontando para a imagem pronta.
    A VPS passa a só fazer `pull`.
+
+### Backend em loop de restart com `ERROR 1044 Access denied ... to database 'SixSeven_Projects'`
+
+O usuário configurado em `DB_USER` não pode **criar** o database. O usuário
+que o template de MySQL do EasyPanel cria (ex.: `mysql`) só tem privilégio no
+database do próprio template — o init precisa de `CREATE DATABASE`,
+`CREATE FUNCTION` e `CREATE TRIGGER`. **Correção sem console**: no serviço do
+backend, troque as envs para `DB_USER=root` e `DB_PASSWORD=<Root Password do
+serviço MySQL>` e salve — no redeploy o entrypoint roda o init completo
+sozinho. Se um init anterior falhou no meio, o entrypoint (versão atual) já
+desfaz o schema parcial antes de sair, então o retry recomeça limpo.
 
 ### Como dar seed no banco na VPS
 
