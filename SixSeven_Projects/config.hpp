@@ -15,10 +15,16 @@
 // =====================================================================
 
 // ---------- Wi-Fi ----------
-#define WIFI_SSID "MUNOZ-COELHO_5G"
+// ATENCAO: o ESP32-S3 so conecta em redes 2.4 GHz. Um SSID "_5G"
+// nunca vai conectar — use a rede 2.4 do mesmo roteador.
+#define WIFI_SSID "MUNOZ-COELHO"
 #define WIFI_PASSWORD "Guacamole23!"
 
 // ---------- Backend (o que conversa com o Drogon) ----------
+// Dominio precisa apontar (DNS A) para o IP da VPS, com a porta 3000
+// publicada no EasyPanel (HTTP cru — este cliente nao faz TLS).
+// O contrato e POST /data + GET /config — NAO trocar por /dados
+// (isso e do outro backend, incompativel com este firmware).
 #define SERVER_HOST "sixsevenapi.nerv3.xyz"
 #define SERVER_PORT 3000
 #define SERVER_PATH "/data"          // POST das leituras
@@ -33,11 +39,16 @@
 #define PIN_POT_BASE 2       // energia base (E_b)
 #define PIN_BUTTON 15        // botao unico (INPUT_PULLUP)
 #define PIN_BUZZER 9
+// LED RGB catodo comum (comum no GND, cor acende em HIGH).
 #define PIN_LED_A 11
 #define PIN_LED_B 12
+#define PIN_LED_C 17         // 3a cor do RGB (hardware novo; ainda sem uso no firmware)
 
 #define PIN_OLED_SCL 4
 #define PIN_OLED_SDA 5
+#define OLED_WIDTH 128       // resolucao do SSD1306
+#define OLED_HEIGHT 64
+#define OLED_ADDRESS 0x3C    // endereco I2C (alguns modulos usam 0x3D)
 
 // ---------- PWM (LEDC) ----------
 #define PWM_FREQ 5000
