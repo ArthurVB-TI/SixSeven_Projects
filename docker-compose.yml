@@ -1,0 +1,64 @@
+# ============================================================
+#  docker-compose.yml — SixSeven_Projects
+#
+#  Uso principal: testar localmente a MESMA imagem que vai para
+#  o EasyPanel (lá, recomenda-se um serviço por container — ver
+#  DEPLOY.md). Também funciona como serviço "Compose" do
+#  EasyPanel, se preferir subir tudo de uma vez.
+#
+#    cp .env.example .env   # ajuste as senhas
+#    docker compose up --build
+#
+#    front:   http://localhost:3001
+#    backend: http://localhost:3000/health
+# ============================================================
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina no .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: SixSeven_Projects
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?defina no .env (openssl rand -hex 32)}
+      APP_ENV: ${APP_ENV:-production}
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-*}
+      DB_AUTO_INIT: "true"
+      DB_SEED: ${DB_SEED:-true}
+    ports:
+      - "3000:3000"   # exposto também para o ESP32 (HTTP cru)
+
+  app:
+    build:
+      context: ./app
+      args:
+        # Rewrites do Next são resolvidos no BUILD — aqui aponta para o
+        # serviço "backend" da rede interna do compose.
+        BACKEND_URL: http://backend:3000
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3001:3001"
+
+volumes:
+  mysql_data:

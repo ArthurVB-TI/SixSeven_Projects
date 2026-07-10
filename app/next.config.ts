@@ -6,6 +6,9 @@ import type { NextConfig } from "next";
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3000";
 
 const nextConfig: NextConfig = {
+  // Build standalone para o Docker: gera .next/standalone com um server.js
+  // mínimo e só as dependências traçadas (imagem final sem node_modules cheio).
+  output: "standalone",
   async rewrites() {
     // Os paths do backend são preservados (não usar prefixo /api): o cookie de
     // refresh é emitido com Path=/auth e só acompanha requests nesse path.

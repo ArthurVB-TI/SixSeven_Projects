@@ -20,6 +20,7 @@ sudo apt-get install -y \
     libssl-dev \
     libpq-dev \
     libbrotli-dev \
+    libmariadb-dev \
     libmysqlclient-dev
 
 echo "==> [2/4] Clonando e compilando o Drogon..."
