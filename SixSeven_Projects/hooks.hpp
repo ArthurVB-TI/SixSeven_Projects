@@ -52,7 +52,13 @@ class Hooks {
             http.addHeader("Content-Type", "application/json");
             int code = http.POST(payload);
             http.end();
-            return code >= 200 && code < 300;
+            bool ok = code >= 200 && code < 300;
+            if (!ok) {
+                // code negativo = erro do HTTPClient (ex.: -1 conexao recusada)
+                Serial.print("POST /data falhou, code=");
+                Serial.println(code);
+            }
+            return ok;
         }
 
         bool pull(Connection& conn) {
@@ -63,6 +69,8 @@ class Hooks {
             int code = http.GET();
             if (code < 200 || code >= 300) {
                 http.end();
+                Serial.print("GET /config falhou, code=");
+                Serial.println(code);
                 return false;
             }
             String body = http.getString();
