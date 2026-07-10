@@ -134,7 +134,14 @@ if [ "$DB_AUTO_INIT" = "true" ]; then
         [ "$DB_SEED" = "true" ] && files="$files data"
         for f in $files; do
             echo "  >> DB/$f.sql"
-            mysql_cmd < "DB/$f.sql"
+            if ! mysql_cmd < "DB/$f.sql"; then
+                # Sem rollback aqui o schema ficaria pela metade e o
+                # próximo restart pularia o init achando que está pronto.
+                echo "ERRO em DB/$f.sql — desfazendo init parcial (DROP DATABASE ${DB_NAME})." >&2
+                echo "Dica: o init precisa de um usuário com CREATE DATABASE/FUNCTION (use root)." >&2
+                mysql_cmd -e "DROP DATABASE IF EXISTS \`${DB_NAME}\`" >/dev/null 2>&1 || true
+                exit 1
+            fi
         done
         echo "Banco inicializado."
     fi
