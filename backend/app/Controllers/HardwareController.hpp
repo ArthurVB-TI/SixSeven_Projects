@@ -60,6 +60,12 @@ public:
             }
             hw_.ingestPush(*json);
 
+            LOG_INFO << "leitura recebida: conexao=" << json->get("id", 0).asInt()
+                     << " E_r=" << json->get("E_r", 0).asInt()
+                     << " E_b=" << json->get("E_b", 0).asInt()
+                     << " V_mer=" << json->get("V_mer", 0).asInt()
+                     << " de " << req->peerAddr().toIpPort();
+
             Json::Value out;
             out["ok"] = true;
             auto r = drogon::HttpResponse::newHttpJsonResponse(out);
@@ -81,6 +87,10 @@ public:
             std::string idStr = req->getParameter("id");
             int id = security::Sanitizer::toPositiveInt(idStr, "id");
             Json::Value cfg = hw_.buildConfig(id); // {id,E_b,timer}
+            LOG_INFO << "config puxada: conexao=" << id
+                     << " -> E_b=" << cfg["E_b"].asInt()
+                     << " timer=" << cfg["timer"].asInt()
+                     << " para " << req->peerAddr().toIpPort();
             auto r = drogon::HttpResponse::newHttpJsonResponse(cfg);
             cb(r);
         } catch (const std::exception& e) {

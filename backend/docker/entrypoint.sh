@@ -49,6 +49,7 @@ set -e
 : "${BCRYPT_COST:=10}"
 : "${CORS_ALLOW_ORIGIN:=*}"
 : "${LOG_LEVEL:=INFO}"
+: "${LOG_PATH:=}"    # vazio = stdout (aparece na aba Logs do EasyPanel)
 : "${DB_AUTO_INIT:=true}"
 : "${DB_SEED:=true}"
 : "${DB_WAIT_TIMEOUT:=90}"
@@ -72,7 +73,7 @@ cat > config/app.config.json <<EOF
     "document_root": "./public",
     "upload_path": "./storage/uploads",
     "log": {
-      "log_path": "./storage/logs",
+      "log_path": "${LOG_PATH}",
       "logfile_base_name": "sixseven",
       "log_level": "${LOG_LEVEL}"
     },
@@ -149,4 +150,6 @@ fi
 
 # ---- 4) backend ----
 echo "Subindo sixseven_backend na porta ${PORT} (env: ${APP_ENV})..."
-exec ./sixseven_backend
+# stdbuf -oL: sem TTY o stdout fica em block-buffering e os LOG_INFO
+# do Drogon so apareceriam no flush (ou nunca); line-buffered resolve.
+exec stdbuf -oL ./sixseven_backend
