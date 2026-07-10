@@ -34,7 +34,7 @@
 #define SERVER_CONFIG_PATH "/config" // GET da configuracao (E_b, timer)
 
 // ---------- Identidade desta conexao/hardware ----------
-#define CONNECTION_ID 1
+#define CONNECTION_ID 5
 
 // ---------- Pinos (ESP32-S3) ----------
 // Potenciometros em ADC1 (GPIO1/GPIO2): unicos que leem certo com Wi-Fi no S3.
@@ -62,12 +62,14 @@
 #define PWM_MAX 255
 
 // ---------- Tempos (ms) ----------
-#define SEND_INTERVAL 10000
+#define SEND_INTERVAL 1000
 #define READ_INTERVAL 1000
 #define RECONNECT_INTERVAL 5000
 #define DEBOUNCE_INTERVAL 200
 #define BOOT_WIFI_WAIT 3000
-#define HTTP_TIMEOUT 1500
+// 1500 era para backend na LAN; via internet (VPS) a primeira conexao
+// TCP pode passar disso e virar timeout intermitente (-11).
+#define HTTP_TIMEOUT 4000
 
 // ---------- Filtro / logica ----------
 #define WINDOW_SIZE 10

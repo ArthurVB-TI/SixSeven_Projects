@@ -45,20 +45,23 @@ class Hooks {
         void setReceivedEnergy(int value) { this->E_r = value; }
 
         bool push(const String& payload, Connection& conn) {
-            if (!conn.wifiConnected()) return false;
+            if (!conn.wifiConnected()) {
+                Serial.println("POST /data pulado: sem WiFi");
+                return false;
+            }
             HTTPClient http;
             http.begin(url(SERVER_PATH));
             http.setTimeout(HTTP_TIMEOUT);
             http.addHeader("Content-Type", "application/json");
             int code = http.POST(payload);
             http.end();
-            bool ok = code >= 200 && code < 300;
-            if (!ok) {
-                // code negativo = erro do HTTPClient (ex.: -1 conexao recusada)
-                Serial.print("POST /data falhou, code=");
-                Serial.println(code);
-            }
-            return ok;
+            // code negativo = erro do HTTPClient (-1 nao conectou,
+            // -11 timeout); 200 = backend recebeu e gravou.
+            Serial.print("POST ");
+            Serial.print(url(SERVER_PATH));
+            Serial.print(" -> ");
+            Serial.println(code);
+            return code >= 200 && code < 300;
         }
 
         bool pull(Connection& conn) {
@@ -67,10 +70,14 @@ class Hooks {
             http.begin(url(SERVER_CONFIG_PATH) + "?id=" + String(CONNECTION_ID));
             http.setTimeout(HTTP_TIMEOUT);
             int code = http.GET();
+            Serial.print("GET ");
+            Serial.print(url(SERVER_CONFIG_PATH));
+            Serial.print("?id=");
+            Serial.print(CONNECTION_ID);
+            Serial.print(" -> ");
+            Serial.println(code);
             if (code < 200 || code >= 300) {
                 http.end();
-                Serial.print("GET /config falhou, code=");
-                Serial.println(code);
                 return false;
             }
             String body = http.getString();
