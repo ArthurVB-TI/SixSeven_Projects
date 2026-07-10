@@ -39,26 +39,26 @@ Separar front e back é necessário porque:
 
 ## Passo a passo no EasyPanel
 
-Os exemplos assumem o projeto chamado **`sixseven`**. O DNS interno do
-EasyPanel é `<projeto>_<serviço>` — se usar outro nome de projeto, ajuste os
-hosts abaixo.
+O DNS interno do EasyPanel é **`<projeto>_<serviço>`**. Os exemplos abaixo
+usam o projeto real **`puc`** com os serviços `mysql`, `sixseven_backend` e
+`sixseven_app` — se os nomes forem outros, ajuste os hosts na mesma regra.
 
 ### 1. Projeto e banco
 
-1. Crie o projeto `sixseven`.
+1. Crie o projeto `puc` (ou use o existente).
 2. **+ Service → MySQL**, nome **`mysql`** (imagem 8.x), defina a senha do
-   root. Não exponha porta pública. Host interno: `sixseven_mysql`.
+   root. Não exponha porta pública. Host interno: `puc_mysql`.
 
 ### 2. Backend
 
-**+ Service → App**, nome **`backend`**:
+**+ Service → App**, nome **`sixseven_backend`**:
 
 - **Source**: GitHub → este repositório, branch `main`, **Build Path: `/backend`**.
 - **Build**: Dockerfile (arquivo `Dockerfile`, relativo ao Build Path).
 - **Environment**:
 
   ```env
-  DB_HOST=sixseven_mysql
+  DB_HOST=puc_mysql
   DB_PORT=3306
   DB_NAME=SixSeven_Projects
   DB_USER=root
@@ -83,14 +83,14 @@ hosts abaixo.
 
 ### 3. Front
 
-**+ Service → App**, nome **`app`**:
+**+ Service → App**, nome **`sixseven_app`**:
 
 - **Source**: mesmo repositório, **Build Path: `/app`**.
 - **Build**: Dockerfile.
 - **Environment** (⚠️ defina **antes do primeiro build** — ver nota abaixo):
 
   ```env
-  BACKEND_URL=http://sixseven_backend:3000
+  BACKEND_URL=http://puc_sixseven_backend:3000
   ```
 
 - **Domains**: seu domínio principal → porta **3001**.
@@ -98,9 +98,10 @@ hosts abaixo.
 
 > **⚠️ `BACKEND_URL` é resolvido no BUILD, não no runtime.** Os `rewrites` do
 > `next.config.ts` são serializados durante o `next build`. Se mudar a URL do
-> backend, clique em **Rebuild** no serviço `app`. Se o seu EasyPanel não
-> repassar variáveis de ambiente como build-arg, edite o default do `ARG
-> BACKEND_URL` em `app/Dockerfile` (hoje: `http://sixseven_backend:3000`).
+> backend, clique em **Rebuild** no serviço do front. O EasyPanel repassa as
+> variáveis de ambiente do serviço como `--build-arg` (confirmado nos logs de
+> build), então basta manter a env correta — o valor tem que ser
+> `http://<projeto>_<serviço-backend>:3000`.
 
 ### 4. Verificação
 
@@ -137,6 +138,73 @@ Alternativa no EasyPanel: em vez de 3 serviços, um único serviço **Compose**
 apontando para o `docker-compose.yml` da raiz também funciona — mas com
 serviços separados o painel dá logs, deploy e domínio individuais, o que é
 mais prático no dia a dia.
+
+## Troubleshooting
+
+### Build do front morre em `npm ci` com `exit code: 152` (ou 137)
+
+Exit code acima de 128 significa **processo morto por sinal** (código − 128):
+**152 = SIGXCPU** (limite de tempo de CPU excedido) e **137 = SIGKILL**
+(normalmente o OOM killer, falta de RAM). O build roda **na própria VPS** —
+em máquinas pequenas (1 vCPU / 1–2 GB) o `npm ci`/`next build` estoura o
+limite. Na ordem:
+
+1. **Tente de novo** (Force Rebuild). Se a VPS estava momentaneamente
+   sobrecarregada, passa na segunda.
+2. **Confira RAM e swap** na VPS: `free -h`. Sem swap, crie 2 GB:
+
+   ```bash
+   fallocate -l 2G /swapfile && chmod 600 /swapfile
+   mkswap /swapfile && swapon /swapfile
+   echo '/swapfile none swap sw 0 0' >> /etc/fstab
+   ```
+
+3. **Confira se foi OOM ou limite do Docker**: `dmesg | grep -iE "oom|killed"`
+   mostra mortes por memória; `cat /etc/docker/daemon.json` — se houver
+   `default-ulimits` com `cpu`, é ele que envia o SIGXCPU (remova e
+   `systemctl restart docker`).
+4. **Plano B (sempre funciona em VPS fraca)**: buildar a imagem fora da VPS —
+   GitHub Actions publicando em `ghcr.io` — e trocar o Source do serviço no
+   EasyPanel de "GitHub" para "Docker Image" apontando para a imagem pronta.
+   A VPS passa a só fazer `pull`.
+
+### Como dar seed no banco na VPS
+
+Na **primeira subida** com `DB_AUTO_INIT=true` e `DB_SEED=true` o seed é
+automático (o entrypoint roda `DB/data.sql` junto com o schema). Se o banco
+**já existe** (o entrypoint loga "Schema já existe — pulando init"), há dois
+caminhos, ambos pelo **Console** do serviço `sixseven_backend` no EasyPanel —
+a imagem já traz o cliente `mysql`, os SQLs em `DB/` e as credenciais nas
+envs:
+
+**Só o seed** (banco criado sem dados — rode UMA vez, o `data.sql` é
+`INSERT` puro e duplica se repetido):
+
+```bash
+mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" < DB/data.sql
+```
+
+**Reset completo** (⚠️ apaga TUDO, inclusive leituras já enviadas pelo ESP32):
+
+```bash
+mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" \
+  -e "DROP DATABASE SixSeven_Projects"
+```
+
+Depois clique em **Restart** no serviço — o entrypoint recria schema + seed.
+
+Para conferir se o seed já está lá:
+
+```bash
+mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" \
+  -e "SELECT id, email FROM SixSeven_Projects.usuario"
+```
+
+### Front no ar mas login/API falham (502/ECONNREFUSED nos rewrites)
+
+Quase sempre é `BACKEND_URL` errado no build. O host interno é
+`<projeto>_<serviço>` — confira o nome exato do serviço do backend no painel
+e **Rebuild** no front após corrigir a env.
 
 ## Notas de produção
 
