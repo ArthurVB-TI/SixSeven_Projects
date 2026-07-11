@@ -24,7 +24,11 @@ configuração, no intervalo definido pelo usuário no site.
 ## 📄 Documentação e apresentação
 
 - **[Relatório do projeto](relatorio.pdf)**
+<<<<<<< HEAD
 - **[PIT — vídeo de apresentação](pit.mp4)**
+=======
+- **[PIT — vídeo de apresentação](https://drive.google.com/file/d/137V0aXunH3p66cYB-xy81Lja_CCOf6IH/view?usp=sharing)**
+>>>>>>> 89003f2 (chore: change pit video to an external link for better performance)
 
 ## 🔌 O hardware (foco do projeto)
 
